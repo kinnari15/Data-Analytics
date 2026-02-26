@@ -104,8 +104,59 @@ SET OwnerSplitState=PARSENAME(REPLACE(OwnerAddress,',','.'),1)
 
 ----------Changing Y to N 
 
-select DISTINCT(SoldVacant), count(SoldVacant)
+select DISTINCT(SoldAsVacant), count(SoldAsVacant)
 from DataCleaningProject.dbo.Nashvillehousing
-group by SoldVacant
-order by SoldVacant;
+group by SoldAsVacant
+order by SoldAsVacant;
+
+select SoldAsVacant,
+CASE 
+WHEN SoldAsVacant='Y' then 'Yes'
+WHEN SoldAsVacant='N' then 'No'
+ELSE SoldAsVacant 
+END
+from DataCleaningProject.dbo.NashvilleHousing;
+
+UPDATE NashvilleHousing
+SET SoldAsVacant = CASE 
+WHEN SoldAsVacant='Y' then 'Yes'
+WHEN SoldAsVacant='N' then 'No'
+ELSE SoldAsVacant 
+END
+from DataCleaningProject.dbo.NashvilleHousing;
+
+
+----Removing Duplicates 
+
+WITH RowNumCTE AS (
+select *, 
+ROW_NUMBER() OVER(
+PARTITION BY ParcelID, 
+			 PropertyAddress, 
+			 SalePrice,
+			 SaleDate,
+			 LegalReference
+			 ORDER BY UniqueID) row_num
+from DataCleaningProject..NashvilleHousing
+--order by ParcelID;
+)
+
+--select * from RowNumCTE
+--where row_num > 1;
+
+DELETE from RowNumCTE
+where row_num > 1;
+
+
+----Delete unused columns 
+
+select * from 
+DataCleaningProject..NashvilleHousing
+
+
+ALTER TABLE DataCleaningProject..NashvilleHousing
+DROP COLUMN PropertyAddress, TaxDistrict,  OwnerAddress;
+
+ALTER TABLE DataCleaningProject..NashvilleHousing
+DROP COLUMN OwnerSplitAddress;
 
